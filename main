@@ -1,0 +1,67 @@
+import cv2
+import numpy as np
+
+# Настройки для обнаружения кругов
+params = cv2.SimpleBlobDetector_Params()
+params.filterByArea = True
+params.minArea = 1  # Минимальная площадь круга
+params.maxArea = 1000000  # Максимальная площадь круга
+params.filterByCircularity = True
+params.minCircularity = 0.7  # Минимальная округлость (1 - идеальный круг)
+params.filterByConvexity = True
+params.minConvexity = 0.8  # Минимальная выпуклость
+params.filterByInertia = True
+params.minInertiaRatio = 0.7  # Минимальное отношение инерции
+
+# Создаем детектор кругов с заданными параметрами
+detector = cv2.SimpleBlobDetector_create(params)
+
+# Открываем видеофайл или видеопоток
+cap = cv2.VideoCapture('C:/Users/Senos/OneDrive/Рабочий стол/фото и видео с микроскопа/видео коллоиды/Фильм_876.avi') # 0 - для веб-камеры, или укажите путь к файлу
+
+# Файл для сохранения координат
+output_file = open('circle_centers.txt', 'w')
+
+frame_count = 0
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Преобразуем кадр в оттенки серого
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Инвертируем изображение, если круги темные на светлом фоне
+    gray = cv2.bitwise_not(gray)
+
+    # Применяем размытие для уменьшения шума
+    blurred = cv2.GaussianBlur(gray, (9, 9), 2)
+
+    # Обнаруживаем круги
+    keypoints = detector.detect(blurred)
+
+    # Рисуем обнаруженные круги
+    im_with_keypoints = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 255, 0),
+                                          cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    # Записываем координаты центров в файл
+    for kp in keypoints:
+        x, y = kp.pt
+        output_file.write(f"Frame {frame_count}: X={x:.2f}, Y={y:.2f}\n")
+
+    # Выводим кадр с отмеченными кругами
+    cv2.imshow('Circle Detection', im_with_keypoints)
+
+    frame_count += 1
+
+    # Выход по нажатию 'q'
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Освобождаем ресурсы
+cap.release()
+output_file.close()
+cv2.destroyAllWindows()
+
+print("Координаты центров кругов сохранены в файл 'circle_centers.txt'")
