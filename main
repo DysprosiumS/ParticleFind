@@ -17,7 +17,7 @@ params.minInertiaRatio = 0.7  # Минимальное отношение ине
 detector = cv2.SimpleBlobDetector_create(params)
 
 # Открываем видеофайл или видеопоток
-cap = cv2.VideoCapture('C:/Users/Senos/OneDrive/Рабочий стол/фото и видео с микроскопа/видео коллоиды/Фильм_876.avi') # 0 - для веб-камеры, или укажите путь к файлу
+cap = cv2.VideoCapture('C:/Users/Senos/OneDrive/Рабочий стол/фото и видео с микроскопа/видео коллоиды/Фильм_876.avi') #путь к файлу
 
 # Файл для сохранения координат
 output_file = open('circle_centers.txt', 'w')
