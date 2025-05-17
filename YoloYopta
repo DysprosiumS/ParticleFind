@@ -1,0 +1,58 @@
+import cv2
+import csv
+from ultralytics import YOLO
+from datetime import datetime
+
+# Загрузка модели YOLO (можно использовать предобученную или свою)
+model = YOLO('yolov8n.pt')  # Загрузка стандартной модели YOLOv8 (может потребоваться дообучение для кругов)
+
+# Открытие видеофайла
+video_path = 'D:/Docs/код частицы/example.mp4'  # Укажите путь к вашему видео
+cap = cv2.VideoCapture(video_path)
+
+# Создание CSV-файла для записи координат
+csv_filename = 'circles_coordinates.csv'
+with open(csv_filename, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['Frame', 'Time (ms)', 'X', 'Y', 'Width', 'Height', 'Confidence'])
+
+frame_count = 0
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Детекция объектов с помощью YOLO
+    results = model(frame, conf=0.5)  # conf - порог уверенности
+
+    # Перебор обнаруженных объектов
+    for result in results:
+        for box in result.boxes:
+            cls = int(box.cls)  # Класс объекта
+            conf = float(box.conf)  # Уверенность
+            x, y, w, h = box.xywh[0].tolist()  # Координаты центра, ширина и высота
+
+            # Если модель обнаружила круг (нужно настроить класс или использовать кастомную модель)
+            # Здесь предполагается, что круг имеет определенный класс (например, 'sports ball' в COCO)
+            if result.names[cls] == 'sports ball':  # Может потребоваться адаптация под вашу задачу
+                # Запись в CSV
+                with open(csv_filename, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow([frame_count, cap.get(cv2.CAP_PROP_POS_MSEC), x, y, w, h, conf])
+
+                # Визуализация (опционально)
+                cv2.rectangle(frame, (int(x - w/2), int(y - h/2)), (int(x + w/2), int(y + h/2)), (0, 255, 0), 2)
+                cv2.putText(frame, f'Circle {conf:.2f}', (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+
+    # Отображение кадра (опционально)
+    cv2.imshow('Frame', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    frame_count += 1
+
+cap.release()
+cv2.destroyAllWindows()
+
+print(f"Данные сохранены в {csv_filename}")
