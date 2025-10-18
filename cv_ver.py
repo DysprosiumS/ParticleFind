@@ -1,4 +1,10 @@
-
+import cv2
+import csv
+import argparse
+import logging
+import time
+from pathlib import Path
+from ultralytics import YOLO
 
 def combined_detection(self, frame):
     """Комбинированный подход: YOLO + OpenCV + фильтрация"""
